@@ -7,13 +7,12 @@ source ./install_config_env.sh
 clients_hostname=${clients_hostname:-localhost}
 
 mkdir -p ${BM_LOGS}
-mkdir -p /data
 
 cd ${PKG_HOME}
 
 # First confirm that have enough storage for the database
 if [ -n "$AMAZON" ]; then
-    sudo source ./amazon_create_raid.sh
+    source ./amazon_create_raid.sh
     if [ $? -eq 1 ]
     then
         echo "Error while creating raid for db storage "
@@ -21,7 +20,9 @@ if [ -n "$AMAZON" ]; then
     fi
 fi
 
+mkdir -p /data
 mount  $DB_STORAGE_DEV /data
+mkdir -p /data/mongodb
 
 # now test that we have enough disk space
 storage_disk_space=$(df /data | grep -v Filesystem  | awk '{print $4}')
@@ -42,11 +43,13 @@ sudo iptables -F
 wait
 tar xf mongodb-linux-x86_64-rhel70-${MONGODB_VER}.tgz
 
-for file in load.sh run_server.sh; do
+for file in load_batch.sh run_server.sh; do
     sed -i.ORIG -e "s/%CLIENTS_HOSTNAME%/${clients_hostname}/"    \
                 -e "s=%BM_LOGS%=$BM_LOGS="                  \
                 -e "s=%MONGODB_BIN_PATH%=$MONGODB_BIN_PATH=" \
                 -e "s=%DB_STORAGE_DEV%=$DB_STORAGE_DEV=" \
+                -e "s=%POPULATION%=$POPULATION=" \
+                -e "s=%LOAD_DB_PROCESSES%=$LOAD_DB_PROCESSES=" \
                 -e "s=%gulu_INSTALLER%=$gulu_INSTALLER=" \
                 -e "s=%PKG_HOME%=$PKG_HOME=" $file
 done

@@ -12,20 +12,11 @@ export BM_LOGS=${PKG_HOME}/logs
 # Example:   export  NON_AMAZON_DB_STORAGE_PATH=/dev/nvme0n1
 export NON_AMAZON_DB_STORAGE_PATH=/dev/nvme0n1
 
-export AMAZON=$(uname -r | grep -i amzn)
-# set here the path to DB storage. example: DB_STORAGE_PATH=/dev/nvme0n1
-
-if [ -z "$AMAZON" ]; then
-    export DB_STORAGE_DEV="$NON_AMAZON_DB_STORAGE_PATH"
-else
-    export DB_STORAGE_DEV="/dev/md0"
-fi
-
 # set here the names (or IPs) of the db server and the client(s).
 export server_hostname=
 export clients_hostname=""
 
-# change here - the population size used in the benchmark.
+# change here - the population size used in the benchmark. Use multiples of 100 millions
 # IMPORTANT: It is crucial for realistic benchmark to set POPULATION according the RAM on the server.
 # Recommendations:
 # RAM       Population size     Required disk storage (estimation)
@@ -51,6 +42,12 @@ export SUDO="sudo"
 # set here the path to gulu_installer. example: gulu_installer=/root/gulu_installer-9.0.3365.62.sh
 export gulu_INSTALLER=/root/gulu_installer-9.0.3365.62.sh
 
-# no need to update the following settings
+# no need to update the following settings:
 export MONGODB_BIN_PATH=${PKG_HOME}/mongodb-linux-x86_64-rhel70-${MONGODB_VER}/bin
 
+export AMAZON=$(uname -r | grep -i amzn)
+if [ -z "$AMAZON" ]; then
+    export DB_STORAGE_DEV="$NON_AMAZON_DB_STORAGE_PATH"
+else
+    export DB_STORAGE_DEV="/dev/md0"
+fi
