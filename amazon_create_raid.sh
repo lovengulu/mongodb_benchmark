@@ -16,11 +16,11 @@ if $1 ; then
         fi
     done
     echo "Going to Create Raid:\nCMD:mdadm --create --verbose ${disk} --level=0 --raid-devices=${count} ${raid_device}"
-    mdadm --create --verbose ${disk} --level=0 --raid-devices=${count} ${raid_device}
-    mkfs.xfs -F ${disk}
+    sudo mdadm --create --verbose ${disk} --level=0 --raid-devices=${count} ${raid_device}
+    sudo mkfs.xfs -K -f ${disk}
 else
-    mkfs.xfs -F ${disk}
+    sudo mkfs.xfs -K -f ${disk}
 fi
-mkdir -p /data
-mount ${disk} /data
+sudo mkdir -p /data
+sudo mount ${disk} /data
 sudo chmod -R 777 /data
