@@ -26,7 +26,7 @@ mkdir -p /data/mongodb
 
 # now test that we have enough disk space
 storage_disk_space=$(df /data | grep -v Filesystem  | awk '{print $4}')
-required_storage_size_estimation=$( bc <<< " 1.3 * $POPULATION "  | awk -F. '{print $1}')
+required_storage_size_estimation=$( bc <<< " 1.5 * $POPULATION "  | awk -F. '{print $1}')
 if [ "$storage_disk_space" -lt "$required_storage_size_estimation" ]; then
     echo "Error: Not enough disk space:"
     echo "   $required_storage_size_estimation KB is required (estimation). "

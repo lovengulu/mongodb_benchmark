@@ -27,7 +27,6 @@ EOF
 
 }
 
-# TODO: NO NEED to add option for journal!. I removed it for the load db step !
 # TODO: how to set CacheSize? a generic approach is to use 70% of the RAM. Need to allow "default" option as well.
 
 if [[ "${test_id}" == "--usa"* ]]; then
@@ -37,6 +36,8 @@ elif [[ "${test_id}" == "-"* ]]; then
     echo "Error: testid can not start with hyphen"
     echo "  use the --usage option for for help"
     exit
+elif [ -z "${test_id}" ];then
+    test_id=noname
 fi
 
 POSITIONAL=(${test_id})
@@ -126,10 +127,9 @@ fi
 
 
 ### start MongoDB server 
-free -g && sync && time echo 3 > /proc/sys/vm/drop_caches && free -g
-#TODO handle mount using cmd line options
-# mount requires sudo
-mount %DB_STORAGE_DEV% /data
+free -g && sync && time echo 1 > /proc/sys/vm/drop_caches && free -g
+
+sudo mount %DB_STORAGE_DEV% /data
 numactl --interleave=all %MONGODB_BIN_PATH%/mongod --dbpath /data/mongodb --bind_ip_all --logpath /data/mongod.log $CACHE_PARAM $INDEX_PARAM &
 
 ### monitoring 
@@ -147,7 +147,7 @@ sleep 10
 
 ### trigger client to start load and wait for the test duration
 sudo iptables -F
-# TODO: I added here few attempts to start the client due to connection issues. need to replace with some more robust code to to it. 
+# TODO: I added here few attempts to start the client due to connection issues. Most likely the issues where with the specific hardware I used. Otherwise, need to replace with some more robust code to to it.
 echo "sending start trigger to client ..."
 for i in $(seq 1 5); do
     for client in $clients_hostname; do
@@ -176,7 +176,7 @@ fi
 wait
 
 # report the throughput:
-./calc_avg_throughput.pl ${test_id}.mongostat
+./calc_avg_throughput.pl %BM_LOGS%/${test_id}.mongostat
 
 if [ -n "$REBOOT" ];then
     wall "rebooting in 60 seconds"

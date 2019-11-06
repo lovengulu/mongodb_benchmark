@@ -35,7 +35,7 @@ for base in $(seq 0 ${last_chunk});do
     echo "Batch $base is done in  $runtime seconds" >> $LOG
     echo "database statistics: ">> $LOG
     /opt/perl-mongo-bm/mongodb-linux-x86_64-4.0.12/bin/mongo --eval '{db = db.getSiblingDB("yftest");db.stats();}' | grep objects >> $LOG
-    %MONGODB_BIN_PATH%/mongo --eval '{db = db.getSiblingDB("yftest");db.users.stats().indexSizes;}' >> $LOG
+    %MONGODB_BIN_PATH%/mongo --eval '{db = db.getSiblingDB("yftest");db.users.stats().indexSizes;}' | grep  "_id_" >> $LOG
     date >> $LOG
     echo "now waiting to confirm all inserts are synced to the storage"
     start_time_fs=`date +%s`
