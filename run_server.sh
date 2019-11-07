@@ -129,6 +129,7 @@ fi
 ### start MongoDB server 
 free -g && sync && time echo 1 > /proc/sys/vm/drop_caches && free -g
 
+#TODO: fix bug. the value from the command line is not used.
 sudo mount %DB_STORAGE_DEV% /data
 numactl --interleave=all %MONGODB_BIN_PATH%/mongod --dbpath /data/mongodb --bind_ip_all --logpath /data/mongod.log $CACHE_PARAM $INDEX_PARAM &
 
@@ -151,7 +152,7 @@ sudo iptables -F
 echo "sending start trigger to client ..."
 for i in $(seq 1 5); do
     for client in $clients_hostname; do
-        echo start | nc  $client  6505
+        echo "$test_id" | nc  $client  6505
     done
     sleep 5
 done
