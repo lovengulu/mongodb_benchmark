@@ -1,6 +1,9 @@
 #!/usr/bin/bash
 
-source ./install_config_env.sh
+mypath="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+cd $mypath
+source ${mypath}/install_config_env.sh
+
 server_hostname=${server_hostname:-localhost}
 
 sudo yum install numactl screen nc -y

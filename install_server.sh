@@ -3,16 +3,37 @@
 # Before running the installer, set the correct values in 'install_config_env.sh'
 # The installer creates two directories. One for the benchmark logs and /data for mounting the storage.
 
-source ./install_config_env.sh
+mypath="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+cd $mypath
+source ${mypath}/install_config_env.sh
+
 clients_hostname=${clients_hostname:-localhost}
+
+# override config file defaults if the parameter is passed via the command line
+
+while :; do
+    case $1 in
+        POPULATION=?*)
+            POPULATION=${1#*=} # Delete everything up to "=" and assign the remainder.
+            ;;
+        DB_STORAGE_DEV=?*)
+            DB_STORAGE_DEV=${1#*=}
+            ;;
+        ?*)
+            printf 'ERROR: Unknown option (ignored): %s\n' "$1" >&2
+            exit 1
+            ;;
+        *)               # Default case: No more options, so break out of the loop.
+            break
+    esac
+    shift
+done
 
 mkdir -p ${BM_LOGS}
 
-cd ${PKG_HOME}
-
-# First confirm that have enough storage for the database
+# First Mount the storage and confirm that have enough space for the database
 if [ -n "$AMAZON" ]; then
-    source ./amazon_create_raid.sh
+    sudo ./amazon_create_raid.sh
     if [ $? -eq 1 ]
     then
         echo "Error while creating raid for db storage "
@@ -35,13 +56,16 @@ if [ "$storage_disk_space" -lt "$required_storage_size_estimation" ]; then
 fi
 
 # Install MongoDB
-curl -O https://fastdl.mongodb.org/linux/mongodb-linux-x86_64-rhel70-${MONGODB_VER}.tgz &
+if [ ! -f "${MONGODB_TARBALL_PATH}/mongodb-linux-x86_64-rhel70-${MONGODB_VER}.tgz" ];then
+    curl -O https://fastdl.mongodb.org/linux/mongodb-linux-x86_64-rhel70-${MONGODB_VER}.tgz &
+    MONGODB_TARBALL_PATH=$(pwd)
+fi
 sudo yum install numactl screen nc -y
 #sudo yum install cpan gcc -y
 sudo yum install dstat -y
 sudo iptables -F
 wait
-tar xf mongodb-linux-x86_64-rhel70-${MONGODB_VER}.tgz
+tar xf ${MONGODB_TARBALL_PATH}/mongodb-linux-x86_64-rhel70-${MONGODB_VER}.tgz
 
 for file in load_batch.sh run_server.sh; do
     sed -i.ORIG -e "s/%CLIENTS_HOSTNAME%/${clients_hostname}/"    \

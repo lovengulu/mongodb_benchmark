@@ -1,13 +1,37 @@
 #!/bin/bash
 
+# ./load_batch.sh - loads the database with the specified number of documents.
+#
+# The script accepts two optional parameters or uses the the defaults as set at install time.
+# Usage example: to load the database with 300M documents using 40 clients run:
+#          ./load_batch.sh  CLIENTS=40 POPULATION=300000000
 
-# TODO: add to files processed by server_install.sh
-# This scrip loads the database with documents.
-# The only parameter (optional) it takes is the number processes to start while loading the database.
-# The POPULATION size parameter is set at the time of running 'install_server.sh'
-
-CLIENTS=${1:-%LOAD_DB_PROCESSES%}
+cd %PKG_HOME%
+CLIENTS=%LOAD_DB_PROCESSES%
 POPULATION=%POPULATION%
+
+
+while :; do
+    case $1 in
+        POPULATION=?*)
+            POPULATION=${1#*=} # Delete everything up to "=" and assign the remainder.
+            ;;
+        CLIENTS=?*)
+            CLIENTS=${1#*=}
+            ;;
+        ?*)
+            printf 'ERROR: Unknown option (ignored): %s\n' "$1" >&2
+            exit 1
+            ;;
+        *)               # Default case: No more options, so break out of the loop.
+            break
+    esac
+    shift
+done
+
+#mypath="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+#cd $mypath
+
 test_start_date=$(date +%s)
 LOG=%BM_LOGS%/load_db.${test_start_date}.log
 date >> $LOG
@@ -23,6 +47,7 @@ echo "database content before loading:" >> $LOG
 %MONGODB_BIN_PATH%/mongo --eval '{db = db.getSiblingDB("yftest");db.stats();}' >> $LOG
 %MONGODB_BIN_PATH%/mongo --eval '{db = db.getSiblingDB("yftest");db.users.stats().indexSizes;}' >> $LOG
 
+echo "starting now to load the database ..." >> $LOG
 # load database in chunks of 100,000,000 users (documents)
 last_chunk=$(($POPULATION / 100000000 -1 ))
 for base in $(seq 0 ${last_chunk});do
@@ -34,7 +59,7 @@ for base in $(seq 0 ${last_chunk});do
     runtime=$((end_time-start_time))
     echo "Batch $base is done in  $runtime seconds" >> $LOG
     echo "database statistics: ">> $LOG
-    /opt/perl-mongo-bm/mongodb-linux-x86_64-4.0.12/bin/mongo --eval '{db = db.getSiblingDB("yftest");db.stats();}' | grep objects >> $LOG
+    %MONGODB_BIN_PATH%/mongo --eval '{db = db.getSiblingDB("yftest");db.stats();}' | grep objects >> $LOG
     %MONGODB_BIN_PATH%/mongo --eval '{db = db.getSiblingDB("yftest");db.users.stats().indexSizes;}' | grep  "_id_" >> $LOG
     date >> $LOG
     echo "now waiting to confirm all inserts are synced to the storage"

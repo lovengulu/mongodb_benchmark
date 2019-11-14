@@ -3,6 +3,9 @@
 # set here the MongoDB version to use:
 MONGODB_VER="4.2.1"
 
+# the installer will look for mongodb installation tarball in this path. If not found, it will download it
+export MONGODB_TARBALL_PATH=~
+
 export PKG_HOME=$(pwd)
 export BM_LOGS=${PKG_HOME}/logs
 
